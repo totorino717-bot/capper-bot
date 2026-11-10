@@ -1,9 +1,24 @@
 import os
+import threading
+from flask import Flask
 import telebot
 
-# Токен вашего бота получается у @BotFather в Telegram
-TOKEN = os.getenv("BOT_TOKEN", "9223025693:AAHBYIDP6m-DG1PW5SLb8g7RLqdEu5wUqa0
-")
+# 1. Запуск микро-сервера Flask для обхода платных ограничений
+app = Flask(__name__)
+
+
+@app.route("/")
+def home():
+  return "Bot is running!"
+
+
+def run_web():
+  port = int(os.getenv("PORT", 8080))
+  app.run(host="0.0.0.0", port=port)
+
+
+# 2. Логика Telegram-бота
+TOKEN = os.getenv("BOT_TOKEN", "ВАШ_ТОКЕН_БОТА")
 bot = telebot.TeleBot(TOKEN)
 
 
@@ -18,7 +33,6 @@ def send_welcome(message):
 
 @bot.message_handler(commands=["prediction"])
 def send_prediction(message):
-  # Пример поста с аналитикой
   text = (
       "📊 **Прогноз на матч**\n\n⚽ **Команда А — Команда Б**\n🏆 Турнир: Лига"
       " Чемпионов\n💡 Прогноз: Победа команды А с форой (0)\n📈 Коэффициент:"
@@ -29,4 +43,7 @@ def send_prediction(message):
 
 
 if __name__ == "__main__":
+  # Запускаем веб-сервер в отдельном потоке
+  threading.Thread(target=run_web, daemon=True).start()
+  # Запускаем самого бота
   bot.infinity_polling()
